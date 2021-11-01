@@ -36,11 +36,28 @@ if (navigator.geolocation)
 					'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 			}).addTo(map);
 
-			//Where the marker will load, using the coords array
-			L.marker(coords)
-				.addTo(map)
-				.bindPopup("A pretty CSS3 popup.<br> Easily customizable.")
-				.openPopup();
+			//Special event method from the leaflet library to handle where the map was clicked, returning an object;
+			map.on("click", (mapEvent) => {
+				//Assignin the lat and lng to variables using destructuring:
+				const { lat, lng } = mapEvent.latlng;
+
+				//Creating a marker where the user has clicked:
+				//We can also set custom properties to the marker, creating an object in the bindPopup argument:
+				L.marker([lat, lng])
+					.addTo(map)
+					.bindPopup(
+						L.popup({
+							maxWidth: 250,
+							minWidth: 100,
+							autoClose: false,
+							closeOnClick: false,
+							// We can also set a className, so we can customize it in the css file:
+							className: "cycling-popup",
+						})
+					)
+					.setPopupContent("Workout")
+					.openPopup();
+			});
 		},
 		() => alert("Could not get your location.")
 	);
