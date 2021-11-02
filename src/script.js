@@ -11,6 +11,53 @@ const inputDuration = document.querySelector(".form__input--duration");
 const inputCadence = document.querySelector(".form__input--cadence");
 const inputElevation = document.querySelector(".form__input--elevation");
 
+//Parent Class to handle the common data between the Cycling and Running child classes:
+class Workout {
+	//Creating a date to store when the activity wa logged:
+	date = new Date();
+	//Creating a unique id to be able to search the array of objects. Usually this is handled by a external library to create unique number, but we are now setting it manually using the new date, converting to string and then getting the last numbers:
+	id = (Date.now() + "").slice(-10);
+
+	//Common properties that the child classes will inherit
+	constructor(coords, distance, duration) {
+		this.coords = coords; // [lat, lang]
+		this.distance = distance; //in km
+		this.duration = duration; //in min
+	}
+}
+
+//Child Class
+class Running extends Workout {
+	constructor(coords, distance, duration, cadence) {
+		super(coords, distance, duration);
+		this.cadence = cadence;
+		//Caling the method to calculate automatically:
+		this.calcPace();
+	}
+
+	//Method for calculating the pace:
+	calcPace() {
+		this.pace = this.duration / this.distance;
+		return this.pace;
+	}
+}
+
+//Child Class
+class Cycling extends Workout {
+	constructor(coords, distance, duration, elevationGaing) {
+		super(coords, distance, duration);
+		this.elevationGaing = elevationGaing;
+		this.calcSpeed();
+	}
+
+	//Method to calculate speed:
+	calcSpeed() {
+		//Dividing by 60 because the duration input is in min:
+		this.speed = this.distance / (this.duration / 60);
+		return this.speed;
+	}
+}
+
 //Main class app to handle the private events:
 class App {
 	//Defining the private instance properties to use with the leaflet library:
