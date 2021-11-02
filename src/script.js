@@ -101,6 +101,9 @@ class App {
 
 		//Event handler to move the map when the user clicks in a logged workout:
 		containerWorkouts.addEventListener("click", this._moveToPopup.bind(this));
+
+		//Getting the data stored in the local storage:
+		this._getLocalStorage();
 	}
 
 	_getPosistion() {
@@ -139,6 +142,12 @@ class App {
 		//Special event method from the leaflet library to handle where the map was clicked, returning an object;
 		//The this keyword of the _showForm method also points to the DOM element, not the App, so we have to manually fix it:
 		this.#map.on("click", this._showForm.bind(this));
+
+		this.#workout.forEach((work) => {
+			//Rendering the activities when the page loads, but we cannot do the same with the marker, because the map takes some time to load and we cannot add a marker to the unloaded map;
+			//So we need to render the marker only when the map finishes loading, thats why we need this method here as well
+			this._renderWorkoutMarker(work);
+		});
 	}
 
 	_showForm(mapE) {
@@ -228,6 +237,9 @@ class App {
 
 		//Hide the form after the user has created an workout:
 		this._hideForm();
+
+		//Method to store the logged activities to the local storage:
+		this._setLocalStorage();
 	}
 
 	_renderWorkoutMarker(workout) {
@@ -325,6 +337,42 @@ class App {
 				duration: 1,
 			},
 		});
+	}
+
+	_setLocalStorage() {
+		//Using the local storage api, where the first parameter is the name (the key), the second is a string to be associated with it;
+		//Using JSON to convert an object to a string;
+		//When we convert to string and then back to objects, we loose the prototype chain and all the inherited methods;
+		localStorage.setItem("workouts", JSON.stringify(this.#workout));
+	}
+
+	//Method to retrieve the data from local storage:
+	_getLocalStorage() {
+		//Using the getItem with the argument being he key, and now converting from string to object again:
+		const data = JSON.parse(localStorage.getItem("workouts"));
+
+		//Checking if there is any data in the storage:
+		if (!data) return;
+
+		//So if there is data, we are setting the workout array to be the same as the one in the local storage:
+		this.#workout = data;
+
+		//Now looping over the array and rendering every object to the user:
+		this.#workout.forEach((work) => {
+			//Rendering the activities when the page loads, but we cannot do the same with the marker, because the map takes some time to load and we cannot add a marker to the unloaded map:
+			this._renderWorkout(work);
+			// this._renderWorkoutMarker(work);
+		});
+	}
+
+	//Public method to wipe out the data from the local storage. It has to be called here or on the console;
+	reset() {
+		localStorage.removeItem("wokouts");
+		//Reloading the page
+		location.reload();
+
+		//To call:
+		// app.reset();
 	}
 }
 
