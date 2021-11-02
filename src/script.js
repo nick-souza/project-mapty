@@ -3,14 +3,6 @@
 // prettier-ignore
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-const form = document.querySelector(".form");
-const containerWorkouts = document.querySelector(".workouts");
-const inputType = document.querySelector(".form__input--type");
-const inputDistance = document.querySelector(".form__input--distance");
-const inputDuration = document.querySelector(".form__input--duration");
-const inputCadence = document.querySelector(".form__input--cadence");
-const inputElevation = document.querySelector(".form__input--elevation");
-
 //Parent Class to handle the common data between the Cycling and Running child classes:
 class Workout {
 	//Creating a date to store when the activity wa logged:
@@ -28,6 +20,9 @@ class Workout {
 
 //Child Class
 class Running extends Workout {
+	//Creating a variable to hold the type:
+	type = "running";
+
 	constructor(coords, distance, duration, cadence) {
 		super(coords, distance, duration);
 		this.cadence = cadence;
@@ -44,6 +39,9 @@ class Running extends Workout {
 
 //Child Class
 class Cycling extends Workout {
+	//Creating a variable to hold the type:
+	type = "cycling";
+
 	constructor(coords, distance, duration, elevationGaing) {
 		super(coords, distance, duration);
 		this.elevationGaing = elevationGaing;
@@ -57,12 +55,23 @@ class Cycling extends Workout {
 		return this.speed;
 	}
 }
+//---------------//Application//---------------//
+
+const form = document.querySelector(".form");
+const containerWorkouts = document.querySelector(".workouts");
+const inputType = document.querySelector(".form__input--type");
+const inputDistance = document.querySelector(".form__input--distance");
+const inputDuration = document.querySelector(".form__input--duration");
+const inputCadence = document.querySelector(".form__input--cadence");
+const inputElevation = document.querySelector(".form__input--elevation");
 
 //Main class app to handle the private events:
 class App {
 	//Defining the private instance properties to use with the leaflet library:
 	#map;
 	#mapEvent;
+	//Creating the private workout array to store all saved workouts:
+	#workout = [];
 
 	//Using the underscore notation to show that these methods show not be handled outside this class:
 	//Empty arguments in the constructor because we dont need any input for our application;
@@ -132,21 +141,72 @@ class App {
 	}
 
 	_newWorkout(e) {
+		//Helper function to validate the user input:
+		//So this takes any types of argument, puts it in a array, then loops over every element and check if they are numbers. And only returns positive if all are numbers;
+		//Same as doing this:
+		// !Number.isFinite(distance) ||
+		// !Number.isFinite(duration) ||
+		// !Number.isFinite(cadence)
+		const validate = (...inputs) => inputs.every((inp) => Number.isFinite(inp));
+		//Second helper function to check if they are positive:
+		const positive = (...inputs) => inputs.every((inp) => inp > 0);
+
 		//Preventing the submit forms to realod the page:
 		e.preventDefault();
 
-		//Clearing the input fields;
-		// prettier-ignore
-
-		inputCadence.value = inputDistance.value = inputDuration.value = inputElevation.value = "";
-
-		//Now we display the marker when the user is done typing:
+		//Now getting the data the user entered in the form:
+		//Getting if it is a cycling or running workout:
+		const type = inputType.value;
+		//Getting the duration and distance and converting then to numbers:
+		const distance = +inputDistance.value;
+		const duration = +inputDuration.value;
 		//Assignin the lat and lng to variables using destructuring:
 		const { lat, lng } = this.#mapEvent.latlng;
+		//Creating the workout object outside so we can then push to the array outiside the if block scope, just reassigning it in the if blick
+		let workout;
 
+		//Chicking what type of workout the activity will be and getting the value of each unique form:
+		if (type === "running") {
+			const cadence = +inputCadence.value;
+			//Now doing the validation of the data that the user has input, using a guard caluse, which means that we are checking fot the opposed of what we want
+			if (
+				!validate(distance, duration, cadence) ||
+				!positive(distance, duration, cadence)
+			)
+				return alert("Inputs have to be positive numbers");
+
+			//New Creating the new object with the inputs are correct, and reassigning it to the already created workout:
+			workout = new Running([lat, lng], distance, duration, cadence);
+		}
+
+		if (type === "cycling") {
+			const elevation = +inputElevation.value;
+			if (
+				!validate(distance, duration, elevation) ||
+				//Here we are not checking for positive elevation because it is allowed to input negative numbers:
+				!positive(distance, duration)
+			)
+				return alert("Inputs have to be positive numbers");
+
+			//New Creating the new object with the inputs are correct, and reassigning it to the already created workout:
+			workout = new Cycling([lat, lng], distance, duration, elevation);
+		}
+
+		//Pushing the new object to the #workout array:
+		this.#workout.push(workout);
+
+		//Now we display the marker when the user is done typing:
+		this.renderWorkoutMarker(workout);
+
+		//Clearing the input fields;
+		// prettier-ignore
+		inputCadence.value = inputDistance.value = inputDuration.value = inputElevation.value = "";
+	}
+
+	renderWorkoutMarker(workout) {
 		//Creating a marker where the user has clicked:
 		//We can also set custom properties to the marker, creating an object in the bindPopup argument:
-		L.marker([lat, lng])
+		L.marker(workout.coords)
 			.addTo(this.#map)
 			.bindPopup(
 				L.popup({
@@ -155,10 +215,11 @@ class App {
 					autoClose: false,
 					closeOnClick: false,
 					// We can also set a className, so we can customize it in the css file:
-					className: "cycling-popup",
+					//Using a template literal to specify if it is a cycling or running workout and change the color:
+					className: `${workout.type}-popup`,
 				})
 			)
-			.setPopupContent("Workout")
+			.setPopupContent("workout")
 			.openPopup();
 	}
 }
