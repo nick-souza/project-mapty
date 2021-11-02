@@ -1,4 +1,4 @@
-# project-mapty
+# Project Mapty
 Project Created During the Course "The Complete JavaScript Course 2021: From Zero to Expert"
 
 Simple web app to log ciclyng and running workouts in a live map.
