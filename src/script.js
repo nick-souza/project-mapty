@@ -98,6 +98,9 @@ class App {
 
 		//Switching between elevation and cadence:
 		inputType.addEventListener("change", this._toggleElevationField);
+
+		//Event handler to move the map when the user clicks in a logged workout:
+		containerWorkouts.addEventListener("click", this._moveToPopup.bind(this));
 	}
 
 	_getPosistion() {
@@ -301,6 +304,27 @@ class App {
 
 		//Adding the workout as a sibling to the form element, in the UL
 		form.insertAdjacentHTML("afterend", html);
+	}
+
+	_moveToPopup(e) {
+		//Since when we load the page for the first time we dont actually have a logged workout to click, we have to find the closest elemenent with that id:
+		const workoutEl = e.target.closest(".workout");
+
+		//And if there is no logged workout it will return null:
+		if (!workoutEl) return;
+
+		//Since every workout has a unique id, we can find the right element in the array by searching for it
+		const workout = this.#workout.find(
+			(work) => work.id === workoutEl.dataset.id
+		);
+
+		//Method in leaflet to move the map to a certain coords, the zoom level and a options object:
+		this.#map.setView(workout.coords, 14, {
+			animate: true,
+			pan: {
+				duration: 1,
+			},
+		});
 	}
 }
 
