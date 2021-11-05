@@ -6,3 +6,8 @@ Developd with pure JavaScript and the Leaflet library. Using the localstorage AP
 
 The live version can be found:
 https://mapty-nick.netlify.app/
+
+##
+
+
+![](https://imgur.com/wJbELRT.png)
